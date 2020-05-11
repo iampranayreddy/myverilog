@@ -1,0 +1,64 @@
+module fake;
+  class packet;
+    rand bit [7:0]a;
+    rand bit [7:0]b;
+  endclass
+  
+  class generator;
+    rand packet pkt;
+    mailbox mb;
+    function new(mailbox mb);
+      this.mb=mb;
+    endfunction
+    task make();
+      repeat(3)
+        begin
+          pkt=new();
+          pkt.randomize();
+         // if(randomize.pkt())
+          //  $display("successfully randomised");
+          mb.put(pkt);
+          $display("packet sent");
+          $display("%d --- %d",pkt.a,pkt.b);
+          $display("generator put packet\n");
+        end
+    endtask
+  endclass
+  
+  class driver;
+    packet pkt;
+    mailbox mb;
+    
+    function new(mailbox mb);
+      this.mb=mb;
+    endfunction
+    task recieve();
+      
+      repeat(3)
+       begin
+         mb.get(pkt);
+         $display("packet recieved");
+         $display("%d--%d--\n",pkt.a,pkt.b);
+        // $display("%d--%d--\n",pkt.b);   
+       end
+    endtask
+  endclass
+      generator gen;
+      driver dv;
+      mailbox mb;
+      initial
+        begin
+          mb=new();
+          gen=new(mb);
+          dv=new(mb);
+          $display("**********************");
+          fork
+            gen.make();
+            dv.recieve();
+            
+            
+          join
+          $display("**********************");
+          
+        end
+endmodule
